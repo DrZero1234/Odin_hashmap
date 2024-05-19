@@ -1,7 +1,11 @@
 class Node {
-    constructor(key,value) {
+
+
+}
+
+class SetNode {
+    constructor(key) {
         this.key = key;
-        this.value = value
         this.next = null
     }
 }
@@ -10,7 +14,7 @@ class Node {
 class LinkedList {
     constructor() {
         this.head = null;
-        this.size = 0;
+        this.size = 1;
     }
 
     append(node) {
@@ -24,13 +28,24 @@ class LinkedList {
         while(currentNode.next) {
             if (currentNode.key === node.key) {
                 currentNode.value = node.value;
-                return this
              }
             currentNode = currentNode.next;
         }
         currentNode.next = node;
-        this.size++;
+        this.size++
         return this
+    }
+
+    display() {
+        let current = this.head;
+        let elements = [];
+
+        while (current) {
+            elements.push(current.key);
+            current = current.next;
+        }
+
+        console.log(elements.join(" -> "))
     }
 
 }
@@ -47,4 +62,4 @@ const list = new LinkedList(node1)
 
 
 
-export {LinkedList, Node}
+export {LinkedList, Node,SetNode}

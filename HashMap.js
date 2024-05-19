@@ -4,10 +4,9 @@ import { LinkedList, Node } from "./LinkedList.js";
 class HashMap {
 
     constructor() {
-        this.currentLength = 16;
+        this.currentLength = 4;
         this.buckets = new Array(this.currentLength).fill(null);
         this.loadFactor = .75;
-        this.capacity = this.buckets.length;
         this.occupied = 0;
     }
 
@@ -28,7 +27,6 @@ class HashMap {
     // The length of the buckets should increase if the occupied buckets reached the load factor
     set(key,value) {
         const index = this.hash(key);
-        console.log(index)
         if (index < 0 || index >= this.buckets.length) {
             throw new Error("Trying to access index out of bound");
         }
@@ -41,6 +39,7 @@ class HashMap {
         } else {
             this.buckets[index].append(node);
         }
+        this.expandBuckets()
     }
     // Returns the key´s value if its found, if its inside a linked list it should go through the linked list until its found
     // If Its not found it should return null
@@ -95,87 +94,135 @@ class HashMap {
         return false
     }
 
+
+
     // If the key is in the HashMap it should remove that entry and return true, otherwise return false.
     remove(key) {
-        if (!key) {
-            return false
-        }
         const index = this.hash(key);
         const list = this.buckets[index];
         if (index < 0 || index >= this.buckets.length) {
             throw new Error("Trying to access index out of bound");
         }
 
-        // If bucket doesnt exist on the index return false
-        if (!list|| !list.head) {
+        if (list === null) {
             return false
         }
 
-            let currentNode = list.head;
-            let nextNode = currentNode.next ;
+        list.display();
 
-            console.log(currentNode);
-            console.log(nextNode)
-            
-            // If the key is the head and the linked list has more elements then the next element will be the head
-
-             if (currentNode.key === key && !currentNode.next) {
-                this.buckets[index] = null;
-                return true
-            }
-            if (currentNode.key === key && !currentNode.next) {
-                list.head = nextNode
-                return true
-
-            // If there is only one element in the linked list removing that element will turn the index of the buckets to null
-            } 
-            else {
-                let previousNode = currentNode;
-                currentNode = currentNode.next;
-                nextNode = currentNode.next;
-
-                while (currentNode.next) {
-                    if (currentNode.key === key) {
-                        if (previousNode && nextNode) {
-                            currentNode.next = null;
-                            previousNode.next = nextNode;
-                            return true
-
-                        } else if (!nextNode) {
-                            currentNode.next = null;
-                            previousNode.next = null;
-                            return true
-                        }
-                    }
-                    previousNode = currentNode;
-                    currentNode = nextNode;
-                    nextNode = currentNode.next
-                }
-            this.buckets[index].size--;
+        if (list.head.key && !list.head.next) {
+            this.buckets[index] = null;
+            this.occupied--;
             return true
-            }
+        }
+
+
+        if (list.head.key === key) {
+            list.head = list.head.next;
+            list.size--;
+            list.display()
+            return true
+        }
+
+
+        let current = list.head;
+        let previous = null;
+
+        while (current && current.key !== key) {
+            previous = current;
+            current = current.next
+        }
+
+        if (current) {
+            previous.next = current.next;
+            list.size--;
+            list.display()
+            return true
+        }
         return false
-        
+
     }
 
     // Returns the number of stored keys of the HashMap
-     length() {
+    length() {
+        let total = 0;
+        this.buckets.forEach((bucket) => {
+            if (bucket) {
+                total += bucket.size
+            }
+
+    })
+
+        return total
 
     }
     // Removes all the entries of the HashMap
      clear() {
-
+        this.buckets = new Array(this.currentLength).fill(null);
     }
     // Returns an array of all the stored keys
     keys() {
-
+        const keyArray = [];
+        this.buckets.forEach((bucket) => {
+            if (bucket) {
+                let current = bucket.head;
+                while(current) {
+                    keyArray.push(current.key);
+                    current = current.next;
+                }
+            }
+        })
+        return keyArray
     }
     // Returns an array of all the stored keys
     values() {
-
+        const valueArray = [];
+        this.buckets.forEach((bucket) => {
+            if (bucket) {
+                let current = bucket.head;
+                while(current) {
+                    valueArray.push(current.value);
+                    current = current.next;
+                }
+            }
+        })
+        return valueArray
     }
     // Returns an array of [key,value] pairs Example: [[firstKey, firstValue], [secondKey, secondValue]]
     entries() {
+        const returnArr = [];
+        this.buckets.forEach((bucket) => {
+            const bucketArr = []
+            if (bucket) {
+                let current = bucket.head;
+                while(current) {
+                    bucketArr.push([current.key,current.value]);
+                    current = current.next;
+                }
+                            returnArr.push(bucketArr)
+            }
+
+        })
+        return returnArr
+    }
+
+    expandBuckets () {
+        if ((this.occupied / this.currentLength) > this.loadFactor) {
+            let copy_arr = this.buckets.slice();
+            this.currentLength = this.currentLength * 2
+            this.buckets = new Array(this.currentLength).fill(null)
+            this.occupied = 0
+            copy_arr.forEach((bucket) => {
+                if (bucket) {
+                    let currentNode = bucket.head;
+                    while(currentNode) {
+                        this.set(currentNode.key,currentNode.value);
+                        currentNode = currentNode.next
+                    }
+                }
+            })
+        }
+
 
     }
 } 
@@ -189,11 +236,20 @@ hashMap.set("asdada", "Bogdan");
 hashMap.set("namei", "Salut");
 hashMap.set("name", "Bogdan");
 
+
+
 hashMap.set("age", 25);
 hashMap.set("city", "New York");
 hashMap.set("job", "Engineer");
 hashMap.set("hobby", "Reading");
 hashMap.set("language", "JavaScript");
+
+
+
+
+
+
+
 hashMap.set("color", "Blue");
 hashMap.set("fruit", "Banana");
 hashMap.set("car", "Tesla");
@@ -275,31 +331,17 @@ hashMap.set("subject4", "Chemistry");
 hashMap.set("color3", "Purple");
 hashMap.set("language3", "Java");
 
-//hashMap.remove("food3")
-console.log(hashMap.buckets[0])
 
+hashMap.set("lel", "fas")
 
-
-console.log(hashMap.get("age"))
-
-console.log(hashMap.has("team3"))
-
-console.log(hashMap.remove("team3"))
-console.log(hashMap.remove("lel"))
-
-
-
-
-
-/*
-
-console.log(hashMap.remove("a"))
-
-console.log(hashMap.remove(7));
-console.log(hashMap.remove("movie"))
 console.log(hashMap.buckets)
 
-*/
+
+
+
+
+
+
 
 
 
